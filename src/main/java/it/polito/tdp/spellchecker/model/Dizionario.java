@@ -10,8 +10,8 @@ import java.util.List;
 
 public class Dizionario {
 
-	//Ogni istanza della classe Dizionario corrisponde ad un possibile dizionario
-	//di riferimento per il controllo ortografico. 
+	//Ogni istanza della classe Dizionario corrisponde ad un possibile 
+	//dizionario di riferimento per il controllo ortografico. 
 
 	
 	//ATTRIBUTI: 
@@ -59,29 +59,76 @@ public class Dizionario {
 	}	
 	
 	
-	//Metodo per l'esecuzione del controllo ortografico:
-	public List<Parola> spellCeckTest(List<String> inputTextList){
+	//Metodo per l'esecuzione del controllo ortografico (RICERCA LINEARE):
+	public List<Parola> spellCheckTextLinear(List<String> inputTextList){
 		
 		ArrayList<Parola> verifiedTextList = new ArrayList<Parola>();
-		
+
 		for (String s : inputTextList) {
 
 			Parola pTemp = null;
 			pTemp.setParola(s); 
-			
-			if (dizionario.contains(s.toLowerCase()))
-				pTemp.setOrtografia(true);
-			 
-			else 
-				pTemp.setOrtografia(false);
-			
-			verifiedTextList.add(pTemp);
+
+			for(String w : dizionario) {
+				
+				if(s.toLowerCase().equals(w))
+					pTemp.setOrtografia(true);
+				else
+					pTemp.setOrtografia(false);
+				
+				
+				verifiedTextList.add(pTemp);
+			}
 		}
 
 		return verifiedTextList;
-		
-	}
 
+	}
+	
+	
+	//Metodo per l'esecuzione del controllo ortografico (RICERCA DICOTOMICA):
+	public List<Parola> spellCheckTextDichotomic(List<String> inputTextList){
+	
+		ArrayList<Parola> verifiedTextList = new ArrayList<Parola>();
+		
+		for(String s : inputTextList) {
+			
+			Parola pTemp = null; 
+			pTemp.setParola(s);
+			
+			if(this.ricercaDicotomica(s))
+				pTemp.setOrtografia(true);	
+			else 
+				pTemp.setOrtografia(false);
+			
+	
+			verifiedTextList.add(pTemp);
+		}
+		
+		return verifiedTextList;
+	}
+	
+	private boolean ricercaDicotomica(String s) {
+	
+		int inizio = 0;
+		int fine = dizionario.size();
+
+		while (inizio != fine) {
+			
+			int medio = inizio + (fine - inizio) / 2;
+			
+			if (s.toLowerCase().compareTo(dizionario.get(medio)) == 0) 
+				return true;
+			
+			else if (s.toLowerCase().compareTo(dizionario.get(medio)) > 0) 
+				inizio = medio + 1;
+			
+			else
+				fine = medio;	
+		}
+
+		return false;
+	}
 	
 	
 }

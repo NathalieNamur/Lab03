@@ -23,6 +23,12 @@ public class FXMLController {
 	private Dizionario modelDizionario;
 	
 	
+	//NB:
+	//Flag per selezionare il tipo di ricerca desiderata (lineare o dicotomica)
+	private static boolean flagLineare = true;
+	private static boolean flagDicotomico = false; 
+	
+	
     @FXML
     private ResourceBundle resources;
 
@@ -56,20 +62,24 @@ public class FXMLController {
     void doActivation(ActionEvent event) {
     	
     	//NB:
-    	//Nella soluzione tale metodo viene utilizzato per abilitare e 
-    	//disabilitare caselle di testo e bottoni a seconda di se sia
-    	//stata o meno scelta la lingua.
+    	//Tale metodo viene utilizzato per abilitare caselle di testo 
+    	//e bottoni una volta selezionata la lingua.
     	
-    	//IMPORTANTE?!! UTILE?!!
-    	//COSI' IL PROGRAMMA GIRA PERFETTAMENTE MA NON E' POSSIBILE 
-    	//ELIMINARE DEL TUTTO IL METODO, ALTRIMENTI NON GIRA PIU'.
+    	if (boxLingua.getValue() !=null) {
+    		
+    		txtDaCorreggere.setDisable(false);
+    		btnCorreggi.setDisable(false);
+    		
+    		txtCorretto.setDisable(false);
+    		btnCancella.setDisable(false);
+    	}
     }
     
     
     @FXML
     void doCancella(ActionEvent event) {
     	
-    	boxLingua.setValue("");
+    	boxLingua.setValue(null);
     	
     	txtDaCorreggere.clear();
 		txtCorretto.clear();
@@ -81,9 +91,9 @@ public class FXMLController {
     
     @FXML
     void doCorreggi(ActionEvent event) {
-    
+
     	//Caricare il dizionario corrispondente alla lingua selezionata:
-    	
+
     	if (!modelDizionario.loadDictionary(boxLingua.getValue())) {
 			txtDaCorreggere.setText("ERRORE nel caricamento del dizionario!");
 			return;
@@ -92,10 +102,10 @@ public class FXMLController {
 
     	//Trasformare il testo inserito in modo che sia analizzabile,
     	//il testo inserito deve essere trasformato in un elenco di parole:
-    	
+
     	String inputText = txtDaCorreggere.getText();		//stringa contente tutto il testo
     	List<String> inputTextList = new LinkedList<>();	//lista delle singole parole del testo
-    	
+
     	if (inputText.isEmpty()) {
 			txtDaCorreggere.setText("ERRORE: Inserire un testo da correggere!");
 			return;
@@ -104,7 +114,7 @@ public class FXMLController {
     	inputText = inputText.toLowerCase();
 		inputText = inputText.replaceAll("[.,\\/#!$%\\^&\\*;:{}=\\-_`~()\\[\\]]", "");
 		inputText = inputText.replaceAll("\n", " ");
-		
+
 		StringTokenizer st = new StringTokenizer(inputText, " ");
 		while (st.hasMoreTokens()) {
 			inputTextList.add(st.nextToken());
@@ -113,33 +123,37 @@ public class FXMLController {
 		
 		//Contare il tempo necessario all'esecuzione 
 		//del controllo ortografico:
-		
+
 		long start = System.nanoTime();
-		
-		List<Parola> verifiedTextList = modelDizionario.spellCeckTest(inputTextList);
-		
+
+		List<Parola> verifiedTextList = new LinkedList<>(); 
+
+		if(flagLineare)
+			verifiedTextList = modelDizionario.spellCheckTextLinear(inputTextList);
+		else
+			verifiedTextList = modelDizionario.spellCheckTextDichotomic(inputTextList);
+	
 		long end = System.nanoTime();
 
 
 		//Individuare gli errori commessi:
-		
+
 		String wrongWord = "";
 		int numErrori = 0;
-	
+
 		for (Parola p : verifiedTextList) 
 			if (!p.isCorretta()) {
 				numErrori++;
 				wrongWord += p.getParola()+"\n"; 
 			}
-		
+
 
 		//Stampare i risultati: 
-		
+
 		txtCorretto.setText(wrongWord);
-		
+
 		lblEsecuzione.setText("Tempo di esercuzione: " + (end - start) / 1E9 + " sec");
 		lblErrori.setText("Numero di errori effettuati: "+numErrori);
-
 
     }
 
